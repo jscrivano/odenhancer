@@ -1,0 +1,22 @@
+{
+  "name": "odenhancer",
+  "version": "1.0.0",
+  "description": "Open directory enhancement suite",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jscrivano/odenhancer.git"
+  },
+  "keywords": [
+    "od"
+  ],
+  "author": "James Scrivano",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jscrivano/odenhancer/issues"
+  },
+  "homepage": "https://github.com/jscrivano/odenhancer#readme"
+}
