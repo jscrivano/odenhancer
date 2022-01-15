@@ -1,2 +1,2 @@
 # odenhancer
-open directory enhancement suite
+open directory enhancement suite for directories
