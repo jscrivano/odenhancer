@@ -4,6 +4,7 @@
     type FolderInspection = {
         imageCount: number,
         videoCount: number,
+        documentCount: number,
         fileCount: number,
         folderCount: number,
     };
@@ -14,7 +15,24 @@
             low.indexOf(".jpeg") > 0 ||
             low.indexOf(".png") > 0 ||
             low.indexOf(".gif") > 0) && 
-            low.indexOf("icons/") < 0; // exclude the gif icons: icons/image2.gif, icons/back.gif
+            low.indexOf("icons/") < 0; // exclude the gif icons: icons/image2.gif, icons/back.gif, incons/movie.gif
+    }
+
+    const isVideo = function(url : string) : boolean {
+        const low = url.toLocaleLowerCase();
+        return (low.indexOf(".mp4") > 0 ||
+            low.indexOf(".avi") > 0 ||
+            low.indexOf(".wmv") > 0 ||
+            low.indexOf(".mpeg") > 0
+        );
+    }
+
+    const isDocument = function(url : string) : boolean {
+        const low = url.toLocaleLowerCase();
+        return (low.indexOf(".pdf") > 0 ||
+            low.indexOf(".htm") > 0 ||
+            low.indexOf(".xls") > 0
+        );
     }
 
     const isFolder = function(url : string) : boolean {
@@ -29,6 +47,7 @@
         const inspectionResult = {
             imageCount: 0,
             videoCount: 0,
+            documentCount: 0,
             fileCount: 0,
             folderCount: 0,
         }
@@ -41,13 +60,24 @@
             docStr = doc.body.innerHTML;
         }
 
-        // Inspect for images
+        // Inspect for media types
         docStr.split("<a ").forEach(function (fragment) {
-            const endTagIx = fragment.indexOf("</a>");
+            const endTagIx = fragment.indexOf("</a>"); // not a good way to parse html
             if (endTagIx > 4) {
                 const hrefPart = fragment.substring(0, endTagIx);
                 if (isImage(hrefPart)) {
                     inspectionResult.imageCount += 1;
+                    inspectionResult.fileCount += 1;
+                } else if (isVideo(hrefPart)) {
+                    inspectionResult.videoCount += 1;
+                    inspectionResult.fileCount += 1;
+                } else if (isDocument(hrefPart)) {
+                    inspectionResult.documentCount += 1;
+                    inspectionResult.fileCount += 1;
+                } else if (isFolder(hrefPart)) {
+                    inspectionResult.folderCount += 1;
+                } else { 
+                    inspectionResult.fileCount += 1;
                 }
             }
         });
@@ -70,7 +100,7 @@
                 if (req.readyState === 4 && req.status === 200) {
                     const folderInfo = inspect(req.responseText);
                     const folderInfoSpan = document.createElement("span");
-                    folderInfoSpan.innerText = ` (images: ${folderInfo.imageCount})`;
+                    folderInfoSpan.innerText = ` (images: ${folderInfo.imageCount}, videos: ${folderInfo.videoCount}, documents: ${folderInfo.documentCount})`;
                     e.appendChild(folderInfoSpan);
                 }
             };
