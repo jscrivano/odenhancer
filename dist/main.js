@@ -22,6 +22,24 @@
             fileCount: 0,
             folderCount: 0
         };
+        var docStr = "";
+        if (typeof doc === "string") {
+            var parts = doc.split("<body>");
+            docStr = parts[parts.length - 1];
+        }
+        else {
+            docStr = doc.body.innerHTML;
+        }
+        // Inspect for images
+        docStr.split("<a ").forEach(function (fragment) {
+            var endTagIx = fragment.indexOf("</a>");
+            if (endTagIx > 4) {
+                var hrefPart = fragment.substring(0, endTagIx);
+                if (isImage(hrefPart)) {
+                    inspectionResult.imageCount += 1;
+                }
+            }
+        });
         return inspectionResult;
     };
     var aElems = document.getElementsByTagName("a");
@@ -33,26 +51,13 @@
     axs.forEach(function (e) {
         var ahref = e.href;
         if (isFolder(ahref)) {
-            console.log("folder: ".concat(ahref, " from ").concat(e));
             var req = new XMLHttpRequest();
             req.onreadystatechange = function () {
                 if (req.readyState === 4 && req.status === 200) {
-                    var resp = req.responseText;
-                    var imgCount = 0;
-                    var respParts = resp.split("<body>");
-                    respParts[respParts.length - 1].split("<a ").forEach(function (fragment) {
-                        var endTagIx = fragment.indexOf("</a>");
-                        if (endTagIx > 4) {
-                            var hrefPart = fragment.substring(0, endTagIx);
-                            if (isImage(hrefPart)) {
-                                imgCount += 1;
-                            }
-                        }
-                    });
-                    console.log("images in ".concat(ahref, ": ").concat(imgCount));
-                    var countSpan = document.createElement("span");
-                    countSpan.innerText = " (images: ".concat(imgCount, ")");
-                    e.appendChild(countSpan);
+                    var folderInfo = inspect(req.responseText);
+                    var folderInfoSpan = document.createElement("span");
+                    folderInfoSpan.innerText = " (images: ".concat(folderInfo.imageCount, ")");
+                    e.appendChild(folderInfoSpan);
                 }
             };
             req.open("GET", ahref, true);

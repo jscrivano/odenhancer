@@ -33,6 +33,25 @@
             folderCount: 0,
         }
 
+        var docStr = "";
+        if (typeof doc === "string") {
+            const parts = doc.split("<body>");
+            docStr = parts[parts.length-1]
+        } else {
+            docStr = doc.body.innerHTML;
+        }
+
+        // Inspect for images
+        docStr.split("<a ").forEach(function (fragment) {
+            const endTagIx = fragment.indexOf("</a>");
+            if (endTagIx > 4) {
+                const hrefPart = fragment.substring(0, endTagIx);
+                if (isImage(hrefPart)) {
+                    inspectionResult.imageCount += 1;
+                }
+            }
+        });
+
         return inspectionResult;
     }
     
@@ -46,35 +65,17 @@
     axs.forEach(function (e) {
         var ahref = e.href;
         if (isFolder(ahref)) {
-            console.log(`folder: ${ahref} from ${e}`);
-
             var req = new XMLHttpRequest();
             req.onreadystatechange = function () {
                 if (req.readyState === 4 && req.status === 200) {
-                    const resp = req.responseText;
-                    var imgCount = 0;
-
-                    const respParts = resp.split("<body>");
-                    respParts[respParts.length-1].split("<a ").forEach(function (fragment) {
-                        const endTagIx = fragment.indexOf("</a>");
-                        if (endTagIx > 4) {
-                            const hrefPart = fragment.substring(0, endTagIx);
-                            if (isImage(hrefPart)) {
-                                imgCount += 1;
-                            }
-                        }
-                    });
-
-                    console.log(`images in ${ahref}: ${imgCount}`);
-
-                    const countSpan = document.createElement("span");
-                    countSpan.innerText = ` (images: ${imgCount})`;
-                    e.appendChild(countSpan);
+                    const folderInfo = inspect(req.responseText);
+                    const folderInfoSpan = document.createElement("span");
+                    folderInfoSpan.innerText = ` (images: ${folderInfo.imageCount})`;
+                    e.appendChild(folderInfoSpan);
                 }
             };
             req.open("GET", ahref, true);
             req.send(null);
-
         }
     });
 
